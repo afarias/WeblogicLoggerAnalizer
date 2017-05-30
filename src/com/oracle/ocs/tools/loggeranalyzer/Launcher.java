@@ -1,12 +1,12 @@
 package com.oracle.ocs.tools.loggeranalyzer;
 
-import org.apache.log4j.lf5.util.LogFileParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 
 /**
@@ -18,7 +18,7 @@ public class Launcher {
 
     private static Logger logger = LoggerFactory.getLogger(Launcher.class);
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
 
         URL resource = new Thread().getContextClassLoader().getResource("log4j.xml");
         /* The file is chosen */
@@ -27,12 +27,18 @@ public class Launcher {
 
         /* The Dialog is opened */
         Component parent = new JFrame("WebLogic Logger Analyzer");
-        int result = fileChooser.showOpenDialog(parent);
+        fileChooser.showOpenDialog(parent);
 
-        logger.debug("Resultado del diálogo: " + result);
-        logger.debug("Archivo recuperado: " + fileChooser.getSelectedFile().getName());
+        logger.info("Archivo nombre: " + fileChooser.getSelectedFile().getName());
+        logger.info("Archivo ruta: " + fileChooser.getSelectedFile().getAbsolutePath());
 
         /* Se crea el objeto que representa el Log */
         LogFile logFile = new LogFile(fileChooser.getSelectedFile());
+
+        LogAnalyser logAnalyzer = new LogAnalyser();
+        AnalysisReport report = logAnalyzer.analyze(logFile);
+
+        logger.info(report.toString());
+        System.exit(0);
     }
 }
