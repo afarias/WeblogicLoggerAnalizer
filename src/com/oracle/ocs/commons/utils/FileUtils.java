@@ -1,9 +1,8 @@
-package com.oracle.ocs.commons.files;
+package com.oracle.ocs.commons.utils;
 
-import java.io.BufferedInputStream;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import com.oracle.ocs.tools.loggeranalyzer.LogFile;
+
+import java.io.*;
 
 /**
  * @author Andrés Farías on 5/30/17.
@@ -40,4 +39,25 @@ public class FileUtils {
             is.close();
         }
     }
+
+    /**
+     * This method is responsible for  extract the first line of the File.
+     *
+     * @param file The file whose first line is to be extracted.
+     *
+     * @return The file's first line.
+     *
+     * @throws IOException Thrown if there is a problem while reading the file.
+     */
+    public static String extractFirstLine(LogFile file) throws IOException {
+
+        BufferedReader br = new BufferedReader(new FileReader(file.getLogFile()));
+        String line;
+        if ((line = br.readLine()) != null) {
+            return line;
+        }
+
+        return "";
+    }
+
 }

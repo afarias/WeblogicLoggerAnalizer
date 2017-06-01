@@ -7,7 +7,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
 
 /**
  * This class aims to easy the launching process.
@@ -20,20 +19,20 @@ public class Launcher {
 
     public static void main(String[] args) throws IOException {
 
-        URL resource = new Thread().getContextClassLoader().getResource("log4j.xml");
         /* The file is chosen */
         JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setCurrentDirectory(new File("/temp/logs"));
+        fileChooser.setCurrentDirectory(new File("/Users/andres/Dropbox/work/oracle/bice/ORACLE BPM/"));
 
         /* The Dialog is opened */
         Component parent = new JFrame("WebLogic Logger Analyzer");
         fileChooser.showOpenDialog(parent);
 
-        logger.info("Archivo nombre: " + fileChooser.getSelectedFile().getName());
-        logger.info("Archivo ruta: " + fileChooser.getSelectedFile().getAbsolutePath());
+        File selectedFile = fileChooser.getSelectedFile();
+        logger.info("Archivo nombre: " + selectedFile.getName());
+        logger.info("Archivo ruta: " + selectedFile.getAbsolutePath());
 
         /* Se crea el objeto que representa el Log */
-        LogFile logFile = new LogFile(fileChooser.getSelectedFile());
+        LogFile logFile = new LogFile(selectedFile);
 
         LogAnalyser logAnalyzer = new LogAnalyser();
         AnalysisReport report = logAnalyzer.analyze(logFile);

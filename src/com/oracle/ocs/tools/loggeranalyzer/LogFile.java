@@ -1,6 +1,6 @@
 package com.oracle.ocs.tools.loggeranalyzer;
 
-import com.oracle.ocs.commons.files.FileUtils;
+import com.oracle.ocs.commons.utils.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
