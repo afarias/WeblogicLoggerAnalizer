@@ -5,21 +5,35 @@ package com.oracle.ocs.tools.loggeranalyzer;
  */
 public class LogRecordToken {
 
-    protected static final String INIT_TOKEN = "<";
-    protected static final String END_TOKEN = ">";
+    /** The Token's type (LEVEL, SERVER, etc.) */
+    private TokenType tokenType;
 
-    /** The Token's name */
-    private static TokenType tokenType;
+    /** The Token's value */
+    private String tokenValue;
 
-    public LogRecordToken(TokenType tokenType) {
+    /**
+     * Default constructor that requires the minimum: type and value.
+     * @param tokenType The Token's type.
+     * @param tokenValue The Token's value.
+     */
+    public LogRecordToken(TokenType tokenType, String tokenValue) {
         this.tokenType = tokenType;
+        this.tokenValue = tokenValue;
     }
 
-    public static String enclose(Level level) {
-        return INIT_TOKEN + level.getName() + END_TOKEN;
-    }
-
-    public static TokenType getTokenType() {
+    public TokenType getTokenType() {
         return tokenType;
+    }
+
+    public String getTokenValue() {
+        return tokenValue;
+    }
+
+    @Override
+    public String toString() {
+        return "LogRecordToken{" +
+                "tokenType=" + tokenType +
+                ", tokenValue='" + tokenValue + '\'' +
+                '}';
     }
 }

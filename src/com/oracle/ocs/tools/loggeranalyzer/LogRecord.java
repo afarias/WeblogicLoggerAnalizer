@@ -1,54 +1,102 @@
 package com.oracle.ocs.tools.loggeranalyzer;
 
-import java.util.HashMap;
-import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * @author Andrés Farías on 6/1/17.
  */
 public class LogRecord {
 
-    /** A map to store the info about the position of each token in a LogRecord */
-    public static final Map<LogRecordToken, Integer> tokenPositions = new HashMap<>();
+    private static final Logger logger = LoggerFactory.getLogger(LogRecord.class);
 
-    /** The line that stores the log record */
-    private String line;
+    /** The lines that stores the log record */
+    private List<String> lines;
+
+    /** The severity level of this record, initially configured as NONE */
+    private Level level;
+
+    /** All the tokens within the record */
+    private List<LogRecordToken> tokens;
 
     /**
-     * Default and more basic constructor only receiving the line.
+     * Default and more basic constructor only receiving the lines.
      *
-     * @param line The line the has the log record.
+     * @param line The lines the has the log record.
      */
     public LogRecord(String line) {
-        this.line = line;
-    }
-
-    public String getLine() {
-        return line;
+        this.level = Level.NONE;
+        this.lines = new ArrayList<>(Collections.singleton(line));
+        this.tokens = new ArrayList<>();
     }
 
     public Level getLevel() {
-        return LogParser.parseLevel(this.line);
+        return level;
     }
 
-    /**
-     * This method is responsible for determining if <code>this</code> log record has a specific log level.
-     *
-     * @return <code>true</code> if the log record has the specified level and <code>false</code> otherwise.
-     */
-    public boolean isLevel(Level level) {
-        return this.getLevel().equals(level);
-    }
-
-    public boolean hasLevel() {
-        //TODO: Implement me!
-        return false;
+    public void setLevel(Level level) {
+        this.level = level;
     }
 
     @Override
     public String toString() {
         return "LogRecord{" +
-                "line='" + line + '\'' +
+                "lines='" + lines + '\'' +
                 '}';
+    }
+
+    public void addLine(String line) {
+        this.lines.add(line);
+    }
+
+    /**
+     * This method is responsible for returning the header line, which is known to be the first element of the lines
+     * list.
+     *
+     * @return A line which is the header of the current LogRecord.
+     */
+    public String getHeaderLine() {
+
+        /* Verification of basic invariant */
+        if (this.lines.size() < 1) {
+            throw new IllegalStateException("A RecordLog with no line.");
+        }
+
+        /* Otherwise, the first line is returned */
+        return this.lines.get(0);
+    }
+
+    /**
+     * This method is responsible for assigning tokens to the LogRecord.
+     *
+     * @param logRecordTokens The tokens to be assigned.
+     *
+     * @return the number of tokens assigned.
+     */
+    public int assignTokens(List<LogRecordToken> logRecordTokens) {
+
+        int assignmentCounter = 0;
+        for (LogRecordToken logRecordToken : logRecordTokens) {
+            TokenType tokenType = logRecordToken.getTokenType();
+
+            this.tokens.add(logRecordToken);
+            switch (tokenType) {
+                case LEVEL:
+                    try {
+                        this.level = Level.valueOf(logRecordToken.getTokenValue().toUpperCase());
+                    } catch (IllegalArgumentException iae) {
+                        logger.error("Undefined Level: " + logRecordToken.getTokenValue());
+                    }
+                    break;
+            }
+
+            assignmentCounter++;
+        }
+
+        return assignmentCounter;
     }
 }

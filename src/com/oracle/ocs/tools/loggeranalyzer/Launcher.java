@@ -1,5 +1,7 @@
 package com.oracle.ocs.tools.loggeranalyzer;
 
+import com.oracle.ocs.tools.loggeranalyzer.analyser.AnalysisReport;
+import com.oracle.ocs.tools.loggeranalyzer.analyser.LogAnalyser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,8 +33,9 @@ public class Launcher {
         logger.info("Archivo nombre: " + selectedFile.getName());
         logger.info("Archivo ruta: " + selectedFile.getAbsolutePath());
 
-        /* Se crea el objeto que representa el Log */
-        LogFile logFile = new LogFile(selectedFile);
+        /* A LogFile (an object representation of the log file, is created using a Factory for it */
+        LogFileConfiguration configuration = new LogFileConfiguration(selectedFile);
+        LogFile logFile = new LogFileFactory(configuration).createLogFile();
 
         LogAnalyser logAnalyzer = new LogAnalyser();
         AnalysisReport report = logAnalyzer.analyze(logFile);

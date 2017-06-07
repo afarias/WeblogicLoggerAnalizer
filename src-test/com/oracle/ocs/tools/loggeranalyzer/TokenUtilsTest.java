@@ -2,18 +2,26 @@ package com.oracle.ocs.tools.loggeranalyzer;
 
 import org.junit.Test;
 
-import static com.oracle.ocs.tools.loggeranalyzer.LogRecordToken.END_TOKEN;
-import static com.oracle.ocs.tools.loggeranalyzer.LogRecordToken.INIT_TOKEN;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 public class TokenUtilsTest {
+
+    private String initDelimiter;
+    private String endDelimiter;
+    private TokenUtils tokenUtils;
+
+    public TokenUtilsTest() {
+        this.initDelimiter = "<";
+        this.endDelimiter = ">";
+        this.tokenUtils = new TokenUtils(initDelimiter, endDelimiter);
+    }
 
     @Test
     public void testExtractToken() throws Exception {
 
         String tokenValue = "A TOKEN";
-        String token = INIT_TOKEN + tokenValue + END_TOKEN;
-        String extractedTokenValue = TokenUtils.extractToken(token, 1);
+        String token = initDelimiter + tokenValue + endDelimiter;
+        String extractedTokenValue = tokenUtils.extractTokenAtPosition(token, 1);
 
 
         assertEquals(tokenValue, extractedTokenValue);
@@ -23,11 +31,10 @@ public class TokenUtilsTest {
     public void testExtractToken02() throws Exception {
 
         String tokenValue = "A TOKEN";
-        String token = INIT_TOKEN + tokenValue + END_TOKEN;
+        String token = initDelimiter + tokenValue + endDelimiter;
 
         String line = "<TIME!> " + token;
-        String extractedTokenValue = TokenUtils.extractToken(line, 2);
-
+        String extractedTokenValue = tokenUtils.extractTokenAtPosition(line, 2);
 
         assertEquals(tokenValue, extractedTokenValue);
     }
@@ -36,10 +43,10 @@ public class TokenUtilsTest {
     public void testExtractToken03() throws Exception {
 
         String tokenValue = "A TOKEN";
-        String token = INIT_TOKEN + tokenValue + END_TOKEN;
+        String token = initDelimiter + tokenValue + endDelimiter;
 
-        String line = INIT_TOKEN + "TIME!"+ END_TOKEN + token + " " + INIT_TOKEN + "MINUTES!"+ END_TOKEN;
-        String extractedTokenValue = TokenUtils.extractToken(line, 2);
+        String line = initDelimiter + "TIME!" + endDelimiter + token + " " + initDelimiter + "MINUTES!" + endDelimiter;
+        String extractedTokenValue = tokenUtils.extractTokenAtPosition(line, 2);
 
 
         assertEquals(tokenValue, extractedTokenValue);
@@ -47,11 +54,11 @@ public class TokenUtilsTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testExtractToken04() throws Exception {
-        TokenUtils.extractToken("", 2);
+        tokenUtils.extractTokenAtPosition("", 2);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testExtractToken05() throws Exception {
-        TokenUtils.extractToken("<", 2);
+        tokenUtils.extractTokenAtPosition("<", 2);
     }
 }

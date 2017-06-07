@@ -10,7 +10,6 @@ public enum Level {
     private String name;
     private static int position;
 
-
     Level(String name) {
         this.name = name;
     }

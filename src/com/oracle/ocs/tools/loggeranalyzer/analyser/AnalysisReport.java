@@ -1,5 +1,7 @@
-package com.oracle.ocs.tools.loggeranalyzer;
+package com.oracle.ocs.tools.loggeranalyzer.analyser;
 
+import com.oracle.ocs.tools.loggeranalyzer.Level;
+import com.oracle.ocs.tools.loggeranalyzer.LogFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -51,7 +51,7 @@ public class FileUtils {
      */
     public static String extractFirstLine(LogFile file) throws IOException {
 
-        BufferedReader br = new BufferedReader(new FileReader(file.getLogFile()));
+        BufferedReader br = new BufferedReader(new FileReader(file.getLogFileConfiguration().getLogFile()));
         String line;
         if ((line = br.readLine()) != null) {
             return line;
