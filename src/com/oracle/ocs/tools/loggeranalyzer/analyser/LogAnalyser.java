@@ -1,11 +1,14 @@
 package com.oracle.ocs.tools.loggeranalyzer.analyser;
 
-import com.oracle.ocs.tools.loggeranalyzer.*;
-import com.oracle.ocs.tools.loggeranalyzer.analyser.AnalysisReport;
+import com.oracle.ocs.tools.loggeranalyzer.Launcher;
+import com.oracle.ocs.tools.loggeranalyzer.Level;
+import com.oracle.ocs.tools.loggeranalyzer.LogRecord;
+import com.oracle.ocs.tools.loggeranalyzer.model.LogFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,10 +32,6 @@ public class LogAnalyser {
      */
     public AnalysisReport analyze(LogFile logFile) throws IOException {
 
-        /* First thing is to find out the token positions */
-        InferenceMachine inferenceMachine = new InferenceMachine(logFile);
-        inferenceMachine.inferTokenPositions();
-
         /* Lines are read now and stored in memory, God help us */
         parseRecords(logFile);
 
@@ -40,10 +39,83 @@ public class LogAnalyser {
         AnalysisReport analysisReport = new AnalysisReport(logFile);
 
         /* Levels are counted and set to the report */
-        Map<Level, Integer> levels = extractLevels(logFile);
-        analysisReport.setLevels(levels);
+        analysisReport.setLevels(extractLevels(logFile));
+
+        /* Initial date */
+        analysisReport.setInitDate(getInitDate(logFile));
+
+        /* Analysis by Module */
+        Map<String, Map<Level, Integer>> levelsByModule = summarizeLevelsByModule(logFile);
+        analysisReport.setLevelsByModule(levelsByModule);
+
+        /* Error code counting */
+        Map<Level, Map<String, Integer>> errorCounting = errorCounting(logFile);
+        analysisReport.setCodeCounting(errorCounting);
 
         return analysisReport;
+    }
+
+    private Map<Level, Map<String, Integer>> errorCounting(LogFile logFile) {
+
+        Map<Level, Map<String, Integer>> errorCounting = new HashMap<>();
+
+        for (LogRecord logRecord : logFile.getLogRecords()) {
+            String code = logRecord.getCode();
+            if (code != null) {
+                Level level = logRecord.getLevel();
+                if (!errorCounting.containsKey(level)) {
+                    errorCounting.put(level, new HashMap<String, Integer>());
+                }
+                Map<String, Integer> codeCounter = errorCounting.get(level);
+
+                if (!codeCounter.containsKey(code)) {
+                    codeCounter.put(code, 0);
+                }
+                codeCounter.put(code, codeCounter.get(code) + 1);
+            }
+        }
+        return errorCounting;
+    }
+
+    private Map<String, Map<Level, Integer>> summarizeLevelsByModule(LogFile logFile) {
+        Map<String, Map<Level, Integer>> levelsByModule = new HashMap<>();
+        for (LogRecord logRecord : logFile.getLogRecords()) {
+
+            /* First the log is read */
+            String module = logRecord.getModule();
+            if (!levelsByModule.containsKey(module)) {
+                levelsByModule.put(module, new HashMap<Level, Integer>());
+            }
+            Map<Level, Integer> levelCounter = levelsByModule.get(module);
+
+            /* Then it's level */
+            Level level = logRecord.getLevel();
+            if (!levelCounter.containsKey(level)) {
+                levelCounter.put(level, 0);
+            }
+            levelCounter.put(level, levelCounter.get(level) + 1);
+        }
+        return levelsByModule;
+    }
+
+    /**
+     * This method is responsible for finding the more little date of the log.
+     *
+     * @param logFile The Log File to be analyzed.
+     *
+     * @return The initial date of the log.
+     */
+    private Date getInitDate(LogFile logFile) {
+
+        Date winner = new Date();
+        for (LogRecord logRecord : logFile.getLogRecords()) {
+            Date logDate = logRecord.getLogDate();
+            if (logDate.compareTo(winner) < 0) {
+                winner = logDate;
+            }
+        }
+
+        return winner;
     }
 
     private List<LogRecord> parseRecords(LogFile logFile) {
@@ -62,10 +134,6 @@ public class LogAnalyser {
      */
     private Map<Level, Integer> extractLevels(LogFile logFile) throws IOException {
 
-        /* The log configuration */
-        LogFileConfiguration config = logFile.getLogFileConfiguration();
-        TokenUtils tokenUtils = new TokenUtils(config.getInitDelimiter(), config.getEndDelimiter());
-
         /* The records are iterated from the LogFile, not from the file, which is way faster */
         Map<Level, Integer> levels = new HashMap<>();
         for (LogRecord logRecord : logFile.getLogRecords()) {
@@ -75,7 +143,6 @@ public class LogAnalyser {
                 levels.put(level, 0);
             }
             levels.put(level, levels.get(level) + 1);
-
         }
 
         return levels;

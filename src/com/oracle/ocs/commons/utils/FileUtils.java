@@ -1,7 +1,5 @@
 package com.oracle.ocs.commons.utils;
 
-import com.oracle.ocs.tools.loggeranalyzer.LogFile;
-
 import java.io.*;
 
 /**
@@ -17,7 +15,7 @@ public class FileUtils {
      * @return
      *
      * @throws IOException Thrown if there are problems while reading the file.
-     * @see https://stackoverflow.com/questions/453018/number-of-lines-in-a-file-in-java#
+     * @see     https://stackoverflow.com/questions/453018/number-of-lines-in-a-file-in-java#
      */
     public static int countLines(String filename) throws IOException {
         InputStream is = new BufferedInputStream(new FileInputStream(filename));
@@ -34,7 +32,7 @@ public class FileUtils {
                     }
                 }
             }
-            return (count == 0 && !empty) ? 1 : count;
+            return (count == 0 && !empty) ? 1 : count+1;
         } finally {
             is.close();
         }
@@ -49,15 +47,47 @@ public class FileUtils {
      *
      * @throws IOException Thrown if there is a problem while reading the file.
      */
-    public static String extractFirstLine(LogFile file) throws IOException {
+    public static String extractFirstLine(File file) throws IOException {
 
-        BufferedReader br = new BufferedReader(new FileReader(file.getLogFileConfiguration().getLogFile()));
+        BufferedReader br = new BufferedReader(new FileReader(file));
         String line;
         if ((line = br.readLine()) != null) {
             return line;
         }
 
-        return "";
+        throw new IllegalArgumentException("The file has no lines");
     }
 
+    /**
+     * This method is responsible for extracting the a given line, in the given <code>position</code> of the file.
+     *
+     * @param position The line number requested.
+     * @param file     The file from which the line is retrieved.
+     *
+     * @return The line extracted.
+     *
+     * @throws IOException              If there is a problem when reading the file.
+     * @throws IllegalArgumentException Thrown if the position is negative, or if the position is greater than
+     *                                  the lines in the file.
+     */
+    public static String extractLine(int position, File file) throws IOException {
+
+        if (position <= 0) {
+            throw new IllegalArgumentException("The line number should be a positive integer");
+        }
+
+        String line;
+        BufferedReader br = new BufferedReader(new FileReader(file));
+        int counter = 0;
+        do {
+            line = br.readLine();
+            counter++;
+        } while (counter < position && (line != null));
+
+        if ((position >= counter) && (line == null)) {
+            throw new IllegalArgumentException("The file has not so many lines.");
+        }
+
+        return line;
+    }
 }

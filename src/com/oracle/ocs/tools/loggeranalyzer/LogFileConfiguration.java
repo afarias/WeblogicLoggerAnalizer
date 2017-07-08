@@ -1,5 +1,6 @@
 package com.oracle.ocs.tools.loggeranalyzer;
 
+import com.oracle.ocs.tools.loggeranalyzer.model.Delimiters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,11 +26,8 @@ public class LogFileConfiguration {
     /** A map to store the info about the position of each token in a LogRecord */
     public Map<TokenType, Integer> tokenPositions;
 
-    /** The token's init delimiter */
-    private String initDelimiter = "<";
-
-    /** The token's end delimiter */
-    private String endDelimiter = ">";
+    /** Token Delimiters */
+    private Delimiters delimiters;
 
     public LogFileConfiguration(File logFile) {
         this.logFile = logFile;
@@ -44,55 +42,23 @@ public class LogFileConfiguration {
         return tokenPositions;
     }
 
-    public void setInitDelimiter(String initDelimiter) {
-        this.initDelimiter = initDelimiter;
-    }
-
-    public void setEndDelimiter(String endDelimiter) {
-        this.endDelimiter = endDelimiter;
-    }
-
-    public String getInitDelimiter() {
-        return initDelimiter;
-    }
-
-    public String getEndDelimiter() {
-        return endDelimiter;
-    }
-
-    /**
-     * This method is responsible for enclose a text with the token delimiters.
-     *
-     * @param text The text to be enclosed.
-     *
-     * @return The text enclosed with the delimiters.
-     */
-    public String enclose(String text) {
-        return this.initDelimiter + text + this.endDelimiter;
-    }
-
-    /**
-     * This method is responsible for reading the logFile and extracting only the very first line of the file.
-     *
-     * @return The first line of the file.
-     */
-    public String getFirstLogLine() {
-
-        try {
-            BufferedReader bufferedReader = new BufferedReader(new FileReader(this.logFile));
-            String line;
-            if( (line = bufferedReader.readLine()) != null){
-                return line;
-            } else {
-                return "";
-            }
-        } catch (java.io.IOException e) {
-            logger.error("Error while reading a log file: " + this.logFile.getName());
-            return "";
-        }
+    public void setDelimiter(Delimiters delimiters) {
+        this.delimiters = delimiters;
     }
 
     public Integer addTokenPosition(TokenType tokenType, int position) {
         return tokenPositions.put(tokenType, position);
+    }
+
+    @Override
+    public String toString() {
+        return "LogFileConfiguration{" +
+                "tokenPositions=" + tokenPositions +
+                ", delimiters=" + delimiters +
+                '}';
+    }
+
+    public Delimiters getDelimiters() {
+        return delimiters;
     }
 }

@@ -2,15 +2,18 @@ package com.oracle.ocs.tools.loggeranalyzer;
 
 import com.oracle.ocs.tools.loggeranalyzer.analyser.InferenceMachine;
 import com.oracle.ocs.tools.loggeranalyzer.analyser.LogAnalyser;
+import com.oracle.ocs.tools.loggeranalyzer.model.LogFile;
+import com.oracle.ocs.tools.loggeranalyzer.model.LogFileUtilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import static com.oracle.ocs.tools.loggeranalyzer.TokenType.CODE;
+import static com.oracle.ocs.tools.loggeranalyzer.TokenType.MODULE;
 
 /**
  * This class is responsible for creating instances of a LogFile, based on multiple algorithms of Record fields
@@ -31,6 +34,9 @@ public class LogFileFactory {
     /** A log analyser for the log */
     private LogAnalyser logAnalyser = new LogAnalyser();
 
+    /** Inference machine as a tool */
+    private InferenceMachine inferenceMachine;
+
     /**
      * The basic constructor that requires only the Log Configuration.
      *
@@ -38,7 +44,8 @@ public class LogFileFactory {
      */
     public LogFileFactory(LogFileConfiguration logFileConfiguration) {
         this.logFileConfiguration = logFileConfiguration;
-        tokenUtils = new TokenUtils(logFileConfiguration.getInitDelimiter(), logFileConfiguration.getEndDelimiter());
+        this.tokenUtils = new TokenUtils(logFileConfiguration.getDelimiters());
+        this.inferenceMachine = new InferenceMachine(logFileConfiguration.getLogFile());
     }
 
     /**
@@ -49,10 +56,9 @@ public class LogFileFactory {
     public LogFile createLogFile() throws IOException {
 
         /* The log is created from its configuration file */
+        this.logFileConfiguration.addTokenPosition(MODULE, 3);
+        this.logFileConfiguration.addTokenPosition(CODE, 4);
         LogFile logFile = new LogFile(this.logFileConfiguration);
-
-        /* Before parsing the log for its records, some little IA is performed */
-        new InferenceMachine(logFile).inferTokenPositions();
 
         /* The log is read to extract its log records. Their object representation then is associated with the LogFile */
         List<LogRecord> logRecords = parseLogRecords();
@@ -69,9 +75,7 @@ public class LogFileFactory {
     private List<LogRecord> parseLogRecords() throws IOException {
 
         /* Records are created from the particular info of the log File */
-        FileReader fileReader = new FileReader(this.logFileConfiguration.getLogFile());
-        BufferedReader bufferedReader = new BufferedReader(fileReader);
-        String line;
+        LogFileUtilities logFileUtilities = new LogFileUtilities(logFileConfiguration);
 
         /*
          * For each Log Record one or more lines are to be read. The Log Record will have only one Header Line, and
@@ -79,10 +83,12 @@ public class LogFileFactory {
          */
         LogRecord logRecord = new LogRecord("");
         List<LogRecord> logRecords = new ArrayList<>();
-        while ((line = bufferedReader.readLine()) != null) {
+        while (logFileUtilities.hasNextLine()) {
 
             /* If the read line is a header, then this is a new log record and it's created an initialized */
-            if (isLogRecordHeader(line)) {
+            String line = logFileUtilities.getNextLine();
+
+            if (inferenceMachine.isLogRecordHeader(line)) {
                 logRecord = new LogRecord(line);
                 logRecords.add(logRecord);
 
@@ -91,10 +97,9 @@ public class LogFileFactory {
                 logRecord.assignTokens(logRecordTokens);
 
                 int size = logRecords.size();
-                if (size % 100 == 0) {
+                if (size % 10000 == 0) {
                     logger.info(size + " records read.");
                 }
-                ;
             }
 
             /* Otherwise, the line belongs to the current log record, and it's no processed */
@@ -129,39 +134,6 @@ public class LogFileFactory {
         }
 
         return logRecordTokens;
-    }
-
-    /**
-     * This method is responsible for determining if the given <code>line</code> is a log record header or not. This is
-     * based on the presence on the token extraction and trying to match the token extracted with their corresponding
-     * type.
-     *
-     * @param line The line to be parsed and analysed for determining if it's about a Header Record.
-     *
-     * @return <code>true</code> if the line represents a log record header and <code>false</code> otherwise.
-     */
-    protected boolean isLogRecordHeader(String line) {
-
-        Map<TokenType, Integer> tokenPositions = this.logFileConfiguration.getTokenPositions();
-        int numberOfTokens = tokenPositions.keySet().size();
-
-        List<LogRecordToken> logRecordTokens = tokenUtils.extractTokensFromLine(line);
-        int tokenExtracted = logRecordTokens.size();
-
-        /* If there are less tokens than expected (tokenPositions.size()) then it is not a header */
-        if (numberOfTokens > tokenExtracted) {
-            return false;
-        }
-
-        /* Now, the line can have more tokens than expected, but do they match? */
-        List<LogRecordToken> parsedTokens;
-        try {
-            parsedTokens = parseLogRecordTokens(line, tokenPositions);
-        } catch (IllegalArgumentException iae) {
-            return false;
-        }
-
-        return parsedTokens.size() == numberOfTokens;
     }
 
     public Map<TokenType, Integer> getTokenPositions() {

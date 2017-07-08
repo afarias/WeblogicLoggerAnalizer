@@ -1,15 +1,19 @@
-package com.oracle.ocs.tools.loggeranalyzer;
+package com.oracle.ocs.tools.loggeranalyzer.model;
 
 import com.oracle.ocs.commons.utils.FileUtils;
+import com.oracle.ocs.tools.loggeranalyzer.LogFileConfiguration;
+import com.oracle.ocs.tools.loggeranalyzer.LogRecord;
+import sun.rmi.runtime.Log;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 /**
  * @author Andrés Farías on 5/26/17.
  */
-public class LogFile {
+public class LogFile implements Iterable<LogRecord> {
 
     private static final int UNCOUNTED_LINES = -1;
 
@@ -60,5 +64,10 @@ public class LogFile {
 
     public LogFileConfiguration getLogFileConfiguration() {
         return logFileConfiguration;
+    }
+
+    @Override
+    public Iterator<LogRecord> iterator() {
+        return new LogFieIterator();
     }
 }

@@ -1,10 +1,12 @@
 package com.oracle.ocs.tools.loggeranalyzer;
 
+import com.oracle.ocs.commons.utils.DateUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -22,6 +24,14 @@ public class LogRecord {
 
     /** All the tokens within the record */
     private List<LogRecordToken> tokens;
+
+    /** The record's date */
+    private Date logDate;
+
+    /** The record's module */
+    private String module;
+
+    private String code;
 
     /**
      * Default and more basic constructor only receiving the lines.
@@ -42,6 +52,14 @@ public class LogRecord {
         this.level = level;
     }
 
+    public Date getLogDate() {
+        return logDate;
+    }
+
+    public String getModule() {
+        return module;
+    }
+
     @Override
     public String toString() {
         return "LogRecord{" +
@@ -51,6 +69,10 @@ public class LogRecord {
 
     public void addLine(String line) {
         this.lines.add(line);
+    }
+
+    public List<String> getLines() {
+        return lines;
     }
 
     /**
@@ -92,11 +114,31 @@ public class LogRecord {
                         logger.error("Undefined Level: " + logRecordToken.getTokenValue());
                     }
                     break;
+
+                case DATE:
+                    try {
+                        this.logDate = DateUtils.format(logRecordToken.getTokenValue().toLowerCase());
+                    } catch (IllegalArgumentException iae) {
+                        logger.error("Date not parsed: " + logRecordToken.getTokenValue());
+                    }
+                    break;
+
+                case MODULE:
+                    this.module = logRecordToken.getTokenValue();
+                    break;
+
+                case CODE:
+                    this.code = logRecordToken.getTokenValue();
+                    break;
             }
 
             assignmentCounter++;
         }
 
         return assignmentCounter;
+    }
+
+    public String getCode() {
+        return code;
     }
 }
